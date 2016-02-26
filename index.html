@@ -22,9 +22,9 @@
   	<div id="map" style="height:100%;width:100%;"></div>
     <script>
       var App = {
-        fisher: null,
-        fox: null,
-        bear: null,
+        lowerMontane: null,
+        upperMontane: null,
+        subalpine: null,
         map: null,
         check: function (el) {
           var layer = App[el.id];
@@ -47,35 +47,22 @@
           lng: -119.54910278320312
         },
         div: 'map',
-        overlays: [{
-          popup: {
-            description: 'Date: {{LMT_Date}}',
-            title: '{{animalID}}'
-          },
-          type: 'csv',
-          url: 'http://jsoldenwagner.github.io/gpsData.csv',
-          styles: {point: {'marker-color': '#ffa448',
-            'marker-size': 'medium',
-            'marker-symbol': 'circle-stroked'}},
-            cluster: true
-        }],
+        baseLayers: [
+                'mapbox-outdoors',
+                'nps-parkTilesImagery'
+              ],
         hooks: {
           init: function (callback) {
-            var myIcon = L.icon({
-              iconUrl: 'circle-24@2x.png',
-              iconSize: [24, 24], // size of the icon
-            });
 
             App.map = NPMap.config.L;
-            App.fox = new L.LayerGroup().addTo(App.map);
-            App.fisher = new L.LayerGroup().addTo(App.map);
-            App.bear = new L.LayerGroup().addTo(App.map);
+            App.lowerMontane = new L.LayerGroup().addTo(App.map);
+            App.upperMontane = new L.LayerGroup().addTo(App.map);
+            App.subalpine = new L.LayerGroup().addTo(App.map);
 
-            L.marker([38.181767, -119.581869], {icon: myIcon}).bindPopup('<h1>Fox</h1><p>some text</p><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fox),
-        		L.marker([37.637480, -119.688473], {icon: myIcon}).bindPopup('<h1>Fisher</h1><img src="IMG_0802.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fisher),
-        		L.marker([38.178185, -119.570807], {icon: myIcon}).bindPopup('<h1>Fox</h1><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fox),
-        		L.marker([37.533760, -119.632297], {icon: myIcon}).bindPopup('<h1>Fisher</h1><img src="IMG_0802.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fisher);
-            L.marker([37.868493, -119.604376], {icon: myIcon}).bindPopup('<h1>Fox</h1><p>some text</p><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.bear),
+            L.marker([37.509315, -119.605668]).bindPopup('<h1>Lower Montane Forest</h1><p>3000ft to 7000ft</p><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.lowerMontane),
+            L.marker([37.692144, -119.641251]).bindPopup('<h1>Upper Montane Forest</h1><p>7000ft to 9000ft</p><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.upperMontane),
+
+
 
             callback();
           }
@@ -85,27 +72,27 @@
             '<form>' +
               '<div class="checkbox" style="margin-top:0;">' +
                 '<label>' +
-                  '<input id="fox" onclick="App.check(this);" style="margin-top:5px;" type="checkbox" checked>' +
-                  'Fox' +
+                  '<input id="lowerMontane" onclick="App.check(this);" style="margin-top:5px;" type="checkbox" checked>' +
+                  'Lower Montane Forest' +
                 '</label>' +
               '</div>' +
               '<div class="checkbox" style="margin-top:0;">' +
                 '<label>' +
-                  '<input id="fisher" onclick="App.check(this);" style="margin-top:5px;" type="checkbox" checked>' +
-                  'Fisher' +
+                  '<input id="upperMontane" onclick="App.check(this);" style="margin-top:5px;" type="checkbox" checked>' +
+                  'Upper Montane Forest' +
                 '</label>' +
               '</div>' +
               '<div class="checkbox" style="margin-top:0;">' +
                 '<label>' +
-                  '<input id="bear" onclick="App.check(this);" style="margin-top:5px;" type="checkbox" checked>' +
-                  'Bear' +
+                  '<input id="subalpine" onclick="App.check(this);" style="margin-top:5px;" type="checkbox" checked>' +
+                  'Subalpine Forest' +
                 '</label>' +
               '</div>' +
             '</form>' +
           '',
-          position: 'topright'
+          position: 'bottomleft'
         },
-        zoom: 9
+        zoom: 10
       };
       var script = document.createElement('script');
 
