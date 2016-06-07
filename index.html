@@ -16,10 +16,25 @@
         height: 100%;
         width: 100%;
       }
+      #selectionContainer {
+        position: absolute;
+        bottom: 1em;
+        left: 1em;
+        z-index: 999;
+      }
     </style>
   </head>
   <body>
-  	<div id="map" style="height:100%;width:100%;"></div>
+    <div id="map" style="height:100%;width:100%;"></div>
+    <div id="selectionContainer">
+      <form>
+        <!-- for animals in array, create animal options -->
+        <input type="checkbox" class="animal-choice" value="S366" name="S366"></input>
+        <input type="checkbox" class="animal-choice" value="S373" name="S373"></input>
+        <input type="checkbox" class="animal-choice" value="S371" name="S371"></input>
+        <input type="checkbox" class="animal-choice" value="S367" name="S367"></input>
+      </form>
+    </div>
     <script>
       var App = {
         fisher: null,
@@ -39,28 +54,91 @@
         }
       };
 
+      function applyFilter(choices) {
+        // use JS array filter to get an array of filters 
+        // matching the choices in the choices array
+        var filteredData = myGeoJSON.features.filter(function(entry){
+          // check to see if entry value is in array of choices 
+          return choices.indexOf(entry.properties.animalID) != -1;
+        });
+        
+        return filteredData;
+      };
 
+      function applySelection() {
+        var choices = [];
+        // get some truthiness about whether choices exist
+        // this is mostly to guard against crashiness
+        // when the page is initialized 
+        var choiceMade = typeof choices !== 'undefined';
+        if(choiceMade) {
+          // create jQuery array from checked elements
+          $.each($(".animal-choice:checked"), function(){
+            // get the value of each el in jquery array 
+            // and push it to choices array 
+            choices.push($(this).val());
+          });
+
+          // make a new GeoJSON object
+          var filteredGeoJSON = {
+            "type": "FeatureCollection",
+            "features": applyFilter(choices) // this is the filtery magic
+          }
+          
+          // empty leaflet layerGroup that was created during init
+          // clear all of the existing layers to add the fresh, filetered ones
+          layerHolder.clearLayers();
+          // create a new layer from filtered GeoJSON and add to the map!
+          L.geoJson(filteredGeoJSON).addTo(layerHolder);
+        };
+      };
+
+      function makeGeoJSON(csvData, latitude, longitude) {
+        var geoJSON;
+        csv2geojson.csv2geojson(csvData, {
+            latfield: latitude,
+            lonfield: longitude,
+            delimiter: ','
+        }, function(err, data) {
+          geoJSON = data;
+        });
+        return geoJSON;
+        console.log(geoJSON);
+      }
+
+      var myGeoJSON;
+      var layerHolder;
 
       var NPMap = {
         center: {
-          lat: 37.87810535842238,
-          lng: -119.54910278320312
+          lat: 37.756329896849834, 
+          lng: -119.31289672851562
         },
         div: 'map',
-        overlays: [{
-          popup: {
-            description: 'Date: {{LMT_Date}}',
-            title: '{{animalID}}'
-          },
-          type: 'csv',
-          url: 'http://jsoldenwagner.github.io/gpsData.csv',
-          styles: {point: {'marker-color': '#ffa448',
-            'marker-size': 'medium',
-            'marker-symbol': 'circle-stroked'}},
-            cluster: true
-        }],
         hooks: {
           init: function (callback) {
+            // listen for changes to animal choice values
+            // and apply filter 
+            $("#selectionContainer input").on('change', function(){
+              applySelection();
+            });
+
+            // create empty layerGroup to handle adding, removing Layers
+            layerHolder = L.layerGroup().addTo(NPMap.config.L);
+            // use csv2geojson to grab csv and turn into geojson
+            $.ajax({
+                type: "GET",
+                url: 'http://jsoldenwagner.github.io/gpsData.csv',
+                dataType: "text",
+                // if GET request is successful, pass the csvData on to the 
+                // makeGeoJSON function
+                // specify your lat and long fields to match your data!
+                success: function(csvData) {
+                  myGeoJSON = makeGeoJSON(csvData, 'lat', 'long');
+                }
+            });
+
+
             var myIcon = L.icon({
               iconUrl: 'circle-24@2x.png',
               iconSize: [24, 24], // size of the icon
@@ -72,9 +150,9 @@
             App.bear = new L.LayerGroup().addTo(App.map);
 
             L.marker([38.181767, -119.581869], {icon: myIcon}).bindPopup('<h1>Fox</h1><p>some text</p><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fox),
-        		L.marker([37.637480, -119.688473], {icon: myIcon}).bindPopup('<h1>Fisher</h1><img src="IMG_0802.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fisher),
-        		L.marker([38.178185, -119.570807], {icon: myIcon}).bindPopup('<h1>Fox</h1><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fox),
-        		L.marker([37.533760, -119.632297], {icon: myIcon}).bindPopup('<h1>Fisher</h1><img src="IMG_0802.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fisher);
+            L.marker([37.637480, -119.688473], {icon: myIcon}).bindPopup('<h1>Fisher</h1><img src="IMG_0802.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fisher),
+            L.marker([38.178185, -119.570807], {icon: myIcon}).bindPopup('<h1>Fox</h1><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fox),
+            L.marker([37.533760, -119.632297], {icon: myIcon}).bindPopup('<h1>Fisher</h1><img src="IMG_0802.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.fisher);
             L.marker([37.868493, -119.604376], {icon: myIcon}).bindPopup('<h1>Fox</h1><p>some text</p><img src="IMG_0376.JPG" style="width:304px;height:228px;"><a href="http://www.nps.gov/yose/learn/nature/mammals.htm" target="_blank">learn more</a>').addTo(App.bear),
 
             callback();
@@ -105,7 +183,15 @@
           '',
           position: 'topright'
         },
-        zoom: 9
+        zoom: 12,
+        plugins: [
+          {
+            js: 'csv2geojson.js'
+          },
+          {
+            js: 'https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js'
+          }
+        ]
       };
       var script = document.createElement('script');
 
